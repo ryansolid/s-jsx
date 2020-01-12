@@ -1,7 +1,7 @@
 import S from 's-js';
 export * from './runtime'
 
-import { insert, hydration, startSSR } from "./runtime";
+import { insert, hydrate as hydr, renderToString as rTS } from "./runtime";
 
 type MountableElement = Element | Document | ShadowRoot | DocumentFragment;
 
@@ -14,14 +14,20 @@ export function render(code: () => any, mount: MountableElement): () => void {
   return dispose!;
 }
 
-export function renderSSR(code: () => any, element: MountableElement): () => void {
-  startSSR();
-  return render(code, element);
+export function renderToString(code: () => any): Promise<string> {
+  return S.root(dispose => {
+    const p = rTS(code);
+    dispose();
+    return p;
+  });
 }
 
-export function hydrate(code: () => any, element: MountableElement): () => void {
+export function hydrate(
+  code: () => any,
+  element: MountableElement
+): () => void {
   let disposer: () => void;
-  hydration(() => {
+  hydr(() => {
     disposer = render(code, element);
   }, element);
   return disposer!;
